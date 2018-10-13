@@ -44,44 +44,51 @@ class VGG16():
         return self.data["{}_b".format(name)]
 
     def build(self):
-        mean = tf.constant([123.68, 116.779, 103.939], dtype=tf.float32, shape=[1, 1, 1, 3], name='img_mean')
+        mean = tf.constant([123.68, 116.779, 103.939], dtype=tf.float32,
+                           shape=[1, 1, 1, 3], name='img_mean')
         image = self.image - mean
         self.conv1_1 = self.Convlayers(image, "conv1_1")
         self.conv1_2 = self.Convlayers(self.conv1_1, "conv1_2")
         self.pool1 = self.max_pooling(self.conv1_2, "pool1")
-
+        print("Conv1 with Max pooling. Done!")
         self.conv2_1 = self.Convlayers(self.pool1, "conv2_1")
         self.conv2_2 = self.Convlayers(self.conv2_1, "conv2_2")
         self.pool2 = self.max_pooling(self.conv2_2, "pool2")
-
+        print("Conv2 with Max pooling. Done!")
         self.conv3_1 = self.Convlayers(self.pool2, "conv3_1")
         self.conv3_2 = self.Convlayers(self.conv3_1, "conv3_2")
         self.conv3_3 = self.Convlayers(self.conv3_2, "conv3_3")
         self.pool3 = self.max_pooling(self.conv3_3, "pool3")
-
+        print("Conv3 with Max Pooling. Done!")
         self.conv4_1 = self.Convlayers(self.pool3, "conv4_1")
         self.conv4_2 = self.Convlayers(self.conv4_1, "conv4_2")
         self.conv4_3 = self.Convlayers(self.conv4_2, "conv4_3")
         self.pool4 = self.max_pooling(self.conv4_3, "pool4")
-
+        print("Conv4 with Max Pooling. Done!")
         self.conv5_1 = self.Convlayers(self.pool4, "conv5_1")
         self.conv5_2 = self.Convlayers(self.conv5_1, "conv5_2")
         self.conv5_3 = self.Convlayers(self.conv5_2, "conv5_3")
         self.pool5 = self.max_pooling(self.conv5_3, "pool5")
-
+        print("Conv5 with Max Pooling. Done!")
         shape = int(np.prod(self.pool5.get_shape()[1:]))
         pool5_flat = tf.reshape(self.pool5, [-1, shape])
         self.fc6 = self.fc_layers(pool5_flat, "fc6")
+        print("Fully Connected Layers 1. Done!")
         self.fc7 = self.fc_layers(self.fc6, "fc7")
+        print("Fully Connected Layers 2. Done!")
         self.fc8 = self.fc_layers(self.fc7, "fc8")
+        print("Fully Connected Layers 3. Done!")
 
 
 if __name__ == "__main__":
     session = tf.Session()
-    image = imread("laska.png", mode="RGB")
-    image = imresize(image, (224, 224))
+    image = tf.placeholder(tf.float32, [None, 224, 224, 3])
     vgg = VGG16(image, "vgg16_weights.npz")
-    prob = session.run(vgg.result)[0]
+
+    image1 = imread("laska.png", mode="RGB")
+    image1 = imresize(image1, (224, 224))
+
+    prob = session.run(vgg.result, feed_dict={vgg.image: [image1]})[0]
     preds = (np.argsort(prob)[::-1])[0:5]
     for p in preds:
         print(class_names[p], prob[p])
